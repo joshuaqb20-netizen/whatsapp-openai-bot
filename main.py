@@ -81,13 +81,20 @@ def whatsapp_reply():
         media_url = fetch_image_url(keyword)
         if media_url:
             reply_text = f"🖼 Here’s an image of '{keyword}':"
-            # Send the image via Twilio
-            twilio_client.messages.create(
-                from_="whatsapp:" + twilio_number,
-                to=from_number,
-                body=reply_text,
-                media_url=[media_url]
-            )
+            try:
+                # Try sending the image via Twilio
+                twilio_client.messages.create(
+                    from_="whatsapp:" + twilio_number,
+                    to=from_number,
+                    body=reply_text,
+                    media_url=[media_url]
+                )
+            except Exception as e:
+                print(f"⚠️ Error sending WhatsApp media: {e}")
+                # Fallback: send plain text instead of crashing
+                twilio_resp = MessagingResponse()
+                twilio_resp.message("⚠️ I couldn’t send the image (maybe Twilio daily limit reached).")
+                return str(twilio_resp)
         else:
             reply_text = f"Sorry, I couldn't find an image for '{keyword}'."
             twilio_resp = MessagingResponse()
